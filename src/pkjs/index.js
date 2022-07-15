@@ -96,7 +96,21 @@ Pebble.addEventListener('ready', function() {
   // PebbleKit JS is ready!
   console.log('PebbleKit JS ready in index!');
   
-  doSearch();
+  // Update s_js_ready on watch
+  Pebble.sendAppMessage({'JSReady': 1});
+});
+
+// Get AppMessage events
+Pebble.addEventListener('appmessage', function(e) {
+  // Get the dictionary from the message
+  var dict = e.payload;
+
+  console.log('Got message: ' + JSON.stringify(dict));
+
+  // Read message
+  if(dict['runSearch'] != null) {
+    doSearch();
+  }
 });
 
 function doSearch() {
@@ -147,7 +161,14 @@ function locationSuccess(pos) {
                   "subtitle":"Visible for " + (responseArray[i].duration.toFixed(0) / 10) + " minutes",
                   "body":"Via Open-Notify",
                   "tinyIcon":"app://images/SATELLITE"
-              }     
+              },
+              "actions": [
+                {
+                  "title": "Open app",
+                  "type": "openWatchApp",
+                  "launchCode": 3
+                }
+              ]
           };
   
           console.log('Inserting pin in the future: ' + "lavender-iss-flyover-" + responseArray[i].risetime);
@@ -157,14 +178,20 @@ function locationSuccess(pos) {
               console.log('Result: ' + responseText);
           });
       };
-  
-      Pebble.sendAppMessage({'searchResult': 1 }, function() { // Success
-        console.log('Message sent successfully: ' + JSON.stringify(dict));
-      }, function(e) {
-        console.log('Message failed: ' + JSON.stringify(e));
-      });
+
+      // Send data to watch app
+      var firstRise = responseArray[0].risetime * 1000;
+      var firstDuration = responseArray[0].duration.toFixed(0) / 10;
+      
+      var dict = {
+        'resultCode': 1, // Success code
+        'nextRiseTime': firstRise,
+        'nextDuration': firstDuration
+      }
+      Pebble.sendAppMessage(dict);
   } catch(err) {
     console.log('Error in API onLoad! ' + err);
+    Pebble.sendAppMessage( { 'resultCode': 0 } ); // Failure code
   }
   };
 

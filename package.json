@@ -22,8 +22,9 @@
       "watchface": false
     },
     "messageKeys": [
+      "JSReady",
       "runSearch",
-      "searchResult",
+      "resultCode",
       "nextRiseTime",
       "nextDuration"
     ],
@@ -36,7 +37,7 @@
           "file": "satellite_tiny.png"
         },
         {
-          "type": "bitmap",
+          "type": "raw",
           "name": "SATELLITE_SMALL",
           "file": "satellite_small.png"
         },

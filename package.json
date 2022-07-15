@@ -39,7 +39,7 @@
         {
           "type": "raw",
           "name": "SATELLITE_SMALL",
-          "file": "satellite_small.png"
+          "file": "Small_icon.pdc"
         },
         {
           "type": "bitmap",

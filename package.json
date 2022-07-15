@@ -22,10 +22,41 @@
       "watchface": false
     },
     "messageKeys": [
-      "searchResult" 
+      "runSearch",
+      "searchResult",
+      "nextRiseTime",
+      "nextDuration"
     ],
     "resources": {
-      "media": []
+      "media": [
+        {
+          "menuIcon": true,
+          "type": "bitmap",
+          "name": "SATELLITE_TINY",
+          "file": "satellite_tiny.png"
+        },
+        {
+          "type": "bitmap",
+          "name": "SATELLITE_SMALL",
+          "file": "satellite_small.png"
+        },
+        {
+          "type": "bitmap",
+          "name": "SATELLITE_LARGE",
+          "file": "satellite_large.png"
+        }
+      ],
+      "publishedMedia": [
+        {
+          "name": "SATELLITE",
+          "id": 1,
+          "timeline": {
+            "tiny": "SATELLITE_TINY",
+            "small": "SATELLITE_SMALL",
+            "large": "SATELLITE_LARGE"
+          }
+        }
+      ]
     }
   }
 }

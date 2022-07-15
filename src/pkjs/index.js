@@ -83,11 +83,6 @@ function deleteSharedPin(pin, topics, apiKey, callback) {
 
 /************************************* App ************************************/
 
-Pebble.addEventListener('ready', function() {
-  // PebbleKit JS is ready!
-  console.log('PebbleKit JS ready in index!');
-});
-
 var lat;
 var lon;
 
@@ -95,44 +90,74 @@ var issApi;
 // var timeline = require('./timeline');
 
 // Create the request
-var apiRequest = new XMLHttpRequest();
+var apiRequest;
 
-// receive ISS data and iterate through it
-apiRequest.onload = function() {
-  try {
+Pebble.addEventListener('ready', function() {
+  // PebbleKit JS is ready!
+  console.log('PebbleKit JS ready in index!');
+  
+  doSearch();
+});
+
+function doSearch() {
+  // Choose options about the data returned
+  var options = {
+    enableHighAccuracy: true,
+    maximumAge: 10000,
+    timeout: 10000
+  };
+
+  // Request current position
+  navigator.geolocation.getCurrentPosition(locationSuccess, locationError, options);
+}
+
+
+function locationSuccess(pos) {
+  lat = pos.coords.latitude;
+  lon = pos.coords.longitude;
+
+  issApi = 'http://api.open-notify.org/iss-pass.json?lat=' + pos.coords.latitude + '&lon=' + pos.coords.longitude;
+  console.log('lat= ' + pos.coords.latitude + ' lon= ' + pos.coords.longitude);
+  console.log(issApi);
+
+  // Send the request
+  apiRequest = new XMLHttpRequest();
+  // receive ISS data and iterate through it
+  apiRequest.onload = function() {
+    try {
       // Transform in to JSON
       var json = JSON.parse(this.responseText);
-
+  
       // Read data
       var responseArray = json.response;
-
+  
       var date;
       var pin;
-
+  
       for (let i = 0; i < responseArray.length; i++){
           date = new Date(responseArray[i].risetime * 1000);
           // Create the pin
           pin = {
-              "id": "lavender-iss-flyover-" + responseArray[i].risetime,
+              "id": "lavender-iss-flyover-" + i,
               "time": date.toISOString(),
               "duration": responseArray[i].duration.toFixed(0) / 10,
               "layout": {
                   "type":"genericPin",
                   "title":"ISS Flyover",
-                  "body":"Station will be visible for " + (responseArray[i].duration.toFixed(0) / 10) + " minutes",
-                  "subtitle":"Via Open-Notify",
-                  "tinyIcon":"system://images/NOTIFICATION_GENERIC"
+                  "subtitle":"Visible for " + (responseArray[i].duration.toFixed(0) / 10) + " minutes",
+                  "body":"Via Open-Notify",
+                  "tinyIcon":"app://images/SATELLITE"
               }     
           };
-
+  
           console.log('Inserting pin in the future: ' + "lavender-iss-flyover-" + responseArray[i].risetime);
-
+  
           // Push the pin
           insertUserPin(pin, function(responseText) {
               console.log('Result: ' + responseText);
           });
       };
-
+  
       Pebble.sendAppMessage({'searchResult': 1 }, function() { // Success
         console.log('Message sent successfully: ' + JSON.stringify(dict));
       }, function(e) {
@@ -141,32 +166,12 @@ apiRequest.onload = function() {
   } catch(err) {
     console.log('Error in API onLoad! ' + err);
   }
-};
+  };
 
-
-function success(pos) {
-  lat = pos.coords.latitude;
-  lon = pos.coords.longitude;
-  issApi = 'http://api.open-notify.org/iss-pass.json?lat=' + lat + '&lon=' + lon;
-  console.log('lat= ' + pos.coords.latitude + ' lon= ' + pos.coords.longitude);
-
-  // Send the request
   apiRequest.open('GET', issApi);
   apiRequest.send();
 }
 
-function error(err) {
+function locationError(err) {
   console.log('location error (' + err.code + '): ' + err.message);
 }
-
-/* ... */
-
-// Choose options about the data returned
-var options = {
-  enableHighAccuracy: true,
-  maximumAge: 10000,
-  timeout: 10000
-};
-
-// Request current position
-navigator.geolocation.getCurrentPosition(success, error, options);

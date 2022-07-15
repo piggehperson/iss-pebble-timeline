@@ -1,4 +1,5 @@
 #include <pebble.h>
+#include "detail_page.c"
 
 static Window *s_window;
 static TextLayer *s_text_layer;
@@ -6,9 +7,21 @@ static bool s_js_ready;
 static bool s_launch_reason;
 static AppTimer *s_timeout_timer;
 
+static GDrawCommandImage *s_command_image;
+static Layer *s_canvas_layer;
+
+
 int result_code;
 int next_rise;
 int next_duration;
+
+static void update_proc(Layer *layer, GContext *ctx) {
+  // Set the origin offset from the context for drawing the image
+  GPoint origin = GPoint(10, 20);
+
+  // Draw the GDrawCommandImage to the GContext
+  gdraw_command_image_draw(ctx, s_command_image, origin);
+}
 
 static void timout_timer_handler(void *context) {
   // The timer elapsed because no success was reported
@@ -84,6 +97,11 @@ static void inbox_received_handler(DictionaryIterator *iter, void *context) {
     // Update UI
     text_layer_set_text(s_text_layer, "Next rise duration");
   }
+
+  // Launch details page
+  if (next_rise_tuple && next_duration_tuple) {
+      detail_window_push(next_rise, next_duration);
+  }
 }
 
 static void prv_window_load(Window *window) {
@@ -94,10 +112,21 @@ static void prv_window_load(Window *window) {
   text_layer_set_text(s_text_layer, "initializing JS...");
   text_layer_set_text_alignment(s_text_layer, GTextAlignmentCenter);
   layer_add_child(window_layer, text_layer_get_layer(s_text_layer));
+
+  // Create the canvas Layer
+  s_canvas_layer = layer_create(GRect(30, 30, bounds.size.w, bounds.size.h));
+
+  // Set the LayerUpdateProc
+  layer_set_update_proc(s_canvas_layer, update_proc);
+
+  // Add to parent Window
+  layer_add_child(window_layer, s_canvas_layer);
 }
 
 static void prv_window_unload(Window *window) {
   text_layer_destroy(s_text_layer);
+  layer_destroy(s_canvas_layer);
+  gdraw_command_image_destroy(s_command_image);
 }
 
 static void prv_init(void) {
@@ -108,6 +137,9 @@ static void prv_init(void) {
   // Open AppMessage
   app_message_open(inbox_size, outbox_size);
   app_message_register_inbox_received(inbox_received_handler);
+
+  // Create the object from resource file
+  s_command_image = gdraw_command_image_create_with_resource(RESOURCE_ID_SATELLITE_SMALL);
 
   s_window = window_create();
   window_set_window_handlers(s_window, (WindowHandlers) {

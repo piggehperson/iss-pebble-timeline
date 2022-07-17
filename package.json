@@ -32,19 +32,19 @@
       "media": [
         {
           "menuIcon": true,
-          "type": "bitmap",
+          "type": "raw",
           "name": "SATELLITE_TINY",
-          "file": "satellite_tiny.png"
+          "file": "satellite_tiny.pdc"
         },
         {
           "type": "raw",
           "name": "SATELLITE_SMALL",
-          "file": "Small_icon.pdc"
+          "file": "satellite_small.pdc"
         },
         {
-          "type": "bitmap",
+          "type": "raw",
           "name": "SATELLITE_LARGE",
-          "file": "satellite_large.png"
+          "file": "satellite_large.pdc"
         }
       ],
       "publishedMedia": [

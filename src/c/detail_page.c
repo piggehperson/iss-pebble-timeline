@@ -153,6 +153,14 @@ static void detail_window_load(Window *window) {
     measuredBounds = measure_text(text, textBounds, font, GTextAlignmentLeft);
     setup_text(s_duration_layer, s_scroll_layer, measuredBounds, text, font, PBL_IF_RECT_ELSE(GTextAlignmentLeft, GTextAlignmentCenter));
     expected_content_height = expected_content_height + measuredBounds.size.h + 4;
+    
+    // Init data disclaimer layer
+    text = "Data via Open-notify";
+    font = fonts_get_system_font(FONT_KEY_GOTHIC_18);
+    textBounds = GRect(insetBounds.origin.x, expected_content_height, insetBounds.size.w, 200);
+    measuredBounds = measure_text(text, textBounds, font, GTextAlignmentLeft);
+    setup_text(s_duration_layer, s_scroll_layer, GRect(measuredBounds.origin.x, measuredBounds.origin.y, measuredBounds.size.w, measuredBounds.size.h+4), text, font, PBL_IF_RECT_ELSE(GTextAlignmentLeft, GTextAlignmentCenter));
+    expected_content_height = expected_content_height + measuredBounds.size.h + 4;
 
 
     scroll_layer_set_content_size(s_scroll_layer, GSize(rawBounds.size.w, expected_content_height + 8));

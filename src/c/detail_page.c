@@ -3,7 +3,10 @@
 
 static Window *s_detail_window;
 static StatusBarLayer *s_status_bar;
+
 static ScrollLayer *s_scroll_layer;
+static ContentIndicator *s_indicator;
+static Layer *s_indicator_down_layer;
 
 static TextLayer *s_next_flyover_layer;
 static TextLayer *s_fly_times_layer;
@@ -58,6 +61,7 @@ static void setup_text(
     text_layer_set_text_alignment(textLayer, textAlignment);
 
     scroll_layer_add_child(scrollLayer, text_layer_get_layer(textLayer));
+    text_layer_enable_screen_text_flow_and_paging(textLayer, 6);
 }
 
 static void detail_window_load(Window *window) {
@@ -73,11 +77,38 @@ static void detail_window_load(Window *window) {
     status_bar_layer_set_colors(s_status_bar, DETAIL_BACKGROUND_COLOR, DETAIL_ON_BACKGROUND_COLOR);
     status_bar_layer_set_separator_mode(s_status_bar, StatusBarLayerSeparatorModeNone);
     layer_add_child(root_layer, status_bar_layer_get_layer(s_status_bar));
-    expected_content_height = expected_content_height + STATUS_BAR_LAYER_HEIGHT;
 
+    // Create the ScrollLayer
     s_scroll_layer = scroll_layer_create(GRect(bounds.origin.x, bounds.origin.y + STATUS_BAR_LAYER_HEIGHT, bounds.size.w, bounds.size.h - STATUS_BAR_LAYER_HEIGHT));
     scroll_layer_set_click_config_onto_window(s_scroll_layer, window);
+    scroll_layer_set_paging(s_scroll_layer, PBL_IF_ROUND_ELSE(true, false));
     layer_add_child(root_layer, scroll_layer_get_layer(s_scroll_layer));
+    
+    // Get the ContentIndicator from the ScrollLayer
+    s_indicator = scroll_layer_get_content_indicator(s_scroll_layer);
+
+    // Create a Layers to draw the down arrow
+    s_indicator_down_layer = layer_create(
+                            GRect(0, bounds.size.h - STATUS_BAR_LAYER_HEIGHT,
+                                  bounds.size.w, STATUS_BAR_LAYER_HEIGHT));
+
+    // Add these Layers as children after all other components to appear below
+    layer_add_child(root_layer, s_indicator_down_layer);
+
+    // Configure the properties of each indicator
+    
+
+    const ContentIndicatorConfig down_config = (ContentIndicatorConfig) {
+      .layer = s_indicator_down_layer,
+      .times_out = false,
+      .alignment = GAlignCenter,
+      .colors = {
+        .foreground = DETAIL_ON_BACKGROUND_COLOR,
+        .background = DETAIL_BACKGROUND_COLOR
+      }
+    };
+    content_indicator_configure_direction(s_indicator, ContentIndicatorDirectionDown,
+                                          &down_config);
 
     // Init flyover text layer
     char* text = "Next flyover";
@@ -122,9 +153,17 @@ static void detail_window_load(Window *window) {
 }
 
 static void detail_window_unload(Window *window) {
-    scroll_layer_destroy(s_scroll_layer);
     status_bar_layer_destroy(s_status_bar);
+    scroll_layer_destroy(s_scroll_layer);
+    layer_destroy(s_indicator_down_layer);
+
+    text_layer_destroy(s_next_flyover_layer);
+    text_layer_destroy(s_fly_times_layer);
     layer_destroy(s_satellite_layer);
+    text_layer_destroy(s_location_layer);
+    text_layer_destroy(s_duration_layer);
+    text_layer_destroy(s_data_disclaimer_layer);
+  
     gdraw_command_image_destroy(s_satellite_image);
 }
 

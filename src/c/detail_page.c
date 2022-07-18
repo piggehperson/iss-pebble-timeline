@@ -68,7 +68,13 @@ static void detail_window_load(Window *window) {
     window_set_background_color(window, DETAIL_BACKGROUND_COLOR);
 
     Layer *root_layer = window_get_root_layer(window);
-    GRect bounds = layer_get_bounds(root_layer);
+    GRect rawBounds = layer_get_bounds(root_layer);
+    GRect insetBounds = GRect(
+      LAYOUT_INSET_W,
+      0,
+      rawBounds.size.w - (LAYOUT_INSET_W * 2),
+      rawBounds.size.h
+    );
 
     int expected_content_height = 0;
 
@@ -79,7 +85,7 @@ static void detail_window_load(Window *window) {
     layer_add_child(root_layer, status_bar_layer_get_layer(s_status_bar));
 
     // Create the ScrollLayer
-    s_scroll_layer = scroll_layer_create(GRect(bounds.origin.x, bounds.origin.y + STATUS_BAR_LAYER_HEIGHT, bounds.size.w, bounds.size.h - STATUS_BAR_LAYER_HEIGHT));
+    s_scroll_layer = scroll_layer_create(GRect(rawBounds.origin.x, rawBounds.origin.y + STATUS_BAR_LAYER_HEIGHT, rawBounds.size.w, rawBounds.size.h - STATUS_BAR_LAYER_HEIGHT));
     scroll_layer_set_click_config_onto_window(s_scroll_layer, window);
     scroll_layer_set_paging(s_scroll_layer, PBL_IF_ROUND_ELSE(true, false));
     layer_add_child(root_layer, scroll_layer_get_layer(s_scroll_layer));
@@ -89,8 +95,8 @@ static void detail_window_load(Window *window) {
 
     // Create a Layers to draw the down arrow
     s_indicator_down_layer = layer_create(
-                            GRect(0, bounds.size.h - STATUS_BAR_LAYER_HEIGHT,
-                                  bounds.size.w, STATUS_BAR_LAYER_HEIGHT));
+                            GRect(0, rawBounds.size.h - STATUS_BAR_LAYER_HEIGHT,
+                                  rawBounds.size.w, STATUS_BAR_LAYER_HEIGHT));
 
     // Add these Layers as children after all other components to appear below
     layer_add_child(root_layer, s_indicator_down_layer);
@@ -113,7 +119,7 @@ static void detail_window_load(Window *window) {
     // Init flyover text layer
     char* text = "Next flyover";
     GFont font = fonts_get_system_font(FONT_KEY_GOTHIC_18_BOLD);
-    GRect textBounds = GRect(0, expected_content_height, bounds.size.w, 200);
+    GRect textBounds = GRect(insetBounds.origin.x, expected_content_height, insetBounds.size.w, 200);
     GRect measuredBounds = measure_text(text, textBounds, font, GTextAlignmentCenter);
     setup_text(s_next_flyover_layer, s_scroll_layer, GRect(measuredBounds.origin.x, measuredBounds.origin.y, measuredBounds.size.w, measuredBounds.size.h+4), text, font, GTextAlignmentCenter);
     expected_content_height = expected_content_height + measuredBounds.size.h + 4;
@@ -121,13 +127,13 @@ static void detail_window_load(Window *window) {
     // Init time text layer
     text = "08:00-08:30";
     font = fonts_get_system_font(FONT_KEY_LECO_26_BOLD_NUMBERS_AM_PM);
-    textBounds = GRect(0, expected_content_height, bounds.size.w, 200);
+    textBounds = GRect(insetBounds.origin.x, expected_content_height, insetBounds.size.w, 200);
     measuredBounds = measure_text(text, textBounds, font, GTextAlignmentCenter);
     setup_text(s_fly_times_layer, s_scroll_layer, measuredBounds, text, font, GTextAlignmentCenter);
     expected_content_height = expected_content_height + measuredBounds.size.h + 4;
 
     // init image layer
-    s_satellite_layer = layer_create(GRect((bounds.size.w /2) -40, expected_content_height, 80, 80));
+    s_satellite_layer = layer_create(GRect((rawBounds.size.w /2) -40, expected_content_height, 80, 80));
     layer_set_update_proc(s_satellite_layer, image_update_proc);
     scroll_layer_add_child(s_scroll_layer, s_satellite_layer);
     expected_content_height = expected_content_height + 80;
@@ -135,7 +141,7 @@ static void detail_window_load(Window *window) {
     // Init location text layer
     text = "Location";
     font = fonts_get_system_font(FONT_KEY_GOTHIC_18_BOLD);
-    textBounds = GRect(0, expected_content_height, bounds.size.w, 200);
+    textBounds = GRect(insetBounds.origin.x, expected_content_height, insetBounds.size.w, 200);
     measuredBounds = measure_text(text, textBounds, font, GTextAlignmentCenter);
     setup_text(s_location_layer, s_scroll_layer, measuredBounds, text, font, GTextAlignmentCenter);
     expected_content_height = expected_content_height + measuredBounds.size.h + 4;
@@ -143,13 +149,13 @@ static void detail_window_load(Window *window) {
     // Init more details layer
     text = "Station will be visible in the sky for 30 minutes.";
     font = fonts_get_system_font(FONT_KEY_GOTHIC_18_BOLD);
-    textBounds = GRect(0, expected_content_height, bounds.size.w, 200);
+    textBounds = GRect(insetBounds.origin.x, expected_content_height, insetBounds.size.w, 200);
     measuredBounds = measure_text(text, textBounds, font, GTextAlignmentLeft);
-    setup_text(s_duration_layer, s_scroll_layer, measuredBounds, text, font, GTextAlignmentLeft);
+    setup_text(s_duration_layer, s_scroll_layer, measuredBounds, text, font, PBL_IF_RECT_ELSE(GTextAlignmentLeft, GTextAlignmentCenter));
     expected_content_height = expected_content_height + measuredBounds.size.h + 4;
 
 
-    scroll_layer_set_content_size(s_scroll_layer, GSize(bounds.size.w, expected_content_height + 8));
+    scroll_layer_set_content_size(s_scroll_layer, GSize(rawBounds.size.w, expected_content_height + 8));
 }
 
 static void detail_window_unload(Window *window) {

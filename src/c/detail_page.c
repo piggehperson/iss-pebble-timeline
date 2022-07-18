@@ -59,6 +59,8 @@ static void setup_text(
     text_layer_set_font(textLayer, font);
     text_layer_set_text(textLayer, text);
     text_layer_set_text_alignment(textLayer, textAlignment);
+    text_layer_set_text_color(textLayer, DETAIL_ON_BACKGROUND_COLOR);
+    text_layer_set_background_color(textLayer, DETAIL_BACKGROUND_COLOR);
 
     scroll_layer_add_child(scrollLayer, text_layer_get_layer(textLayer));
     text_layer_enable_screen_text_flow_and_paging(textLayer, 6);
@@ -88,6 +90,7 @@ static void detail_window_load(Window *window) {
     s_scroll_layer = scroll_layer_create(GRect(rawBounds.origin.x, rawBounds.origin.y + STATUS_BAR_LAYER_HEIGHT, rawBounds.size.w, rawBounds.size.h - STATUS_BAR_LAYER_HEIGHT));
     scroll_layer_set_click_config_onto_window(s_scroll_layer, window);
     scroll_layer_set_paging(s_scroll_layer, PBL_IF_ROUND_ELSE(true, false));
+    scroll_layer_set_shadow_hidden(s_scroll_layer, true);
     layer_add_child(root_layer, scroll_layer_get_layer(s_scroll_layer));
     
     // Get the ContentIndicator from the ScrollLayer

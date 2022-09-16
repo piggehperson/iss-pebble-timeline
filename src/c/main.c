@@ -1,8 +1,7 @@
 #include <pebble.h>
 #include "detail_page.c"
+#include "loading_page.c"
 
-static Window *s_window;
-static TextLayer *s_text_layer;
 static bool s_js_ready;
 static bool s_launch_reason;
 static AppTimer *s_timeout_timer;
@@ -53,7 +52,7 @@ static void outbox_sent_handler(DictionaryIterator *iter, void *context) {
 }
 
 static void inbox_received_handler(DictionaryIterator *iter, void *context) {
-  text_layer_set_text(s_text_layer, "Message received!");
+  loading_window_set_text("Message received!");
   
   Tuple *ready_tuple = dict_find(iter, MESSAGE_KEY_JSReady);
   if(ready_tuple) {
@@ -66,40 +65,25 @@ static void inbox_received_handler(DictionaryIterator *iter, void *context) {
   if(result_code_tuple) {
     result_code = result_code_tuple->value->int32;
     // Update UI
-    text_layer_set_text(s_text_layer, "Result code");
+    
   }
   Tuple *next_rise_tuple = dict_find(iter, MESSAGE_KEY_nextRiseTime);
   if(next_rise_tuple) {
     next_rise = next_rise_tuple->value->int32;
     // Update UI
-    text_layer_set_text(s_text_layer, "Next rise time");
+    
   }
   Tuple *next_duration_tuple = dict_find(iter, MESSAGE_KEY_nextDuration);
   if(next_duration_tuple) {
     next_duration = next_duration_tuple->value->int32;
     // Update UI
-    text_layer_set_text(s_text_layer, "Next rise duration");
+    
   }
 
   // Launch details page
   if (next_rise_tuple && next_duration_tuple) {
       detail_window_push(next_rise, next_duration);
-      window_stack_remove(s_window, false);
   }
-}
-
-static void prv_window_load(Window *window) {
-  Layer *window_layer = window_get_root_layer(window);
-  GRect bounds = layer_get_bounds(window_layer);
-
-  s_text_layer = text_layer_create(GRect(0, 72, bounds.size.w, 20));
-  text_layer_set_text(s_text_layer, "initializing JS...");
-  text_layer_set_text_alignment(s_text_layer, GTextAlignmentCenter);
-  layer_add_child(window_layer, text_layer_get_layer(s_text_layer));
-}
-
-static void prv_window_unload(Window *window) {
-  text_layer_destroy(s_text_layer);
 }
 
 static void prv_init(void) {
@@ -111,23 +95,17 @@ static void prv_init(void) {
   app_message_open(inbox_size, outbox_size);
   app_message_register_inbox_received(inbox_received_handler);
 
-  s_window = window_create();
-  window_set_window_handlers(s_window, (WindowHandlers) {
-    .load = prv_window_load,
-    .unload = prv_window_unload,
-  });
-  const bool animated = true;
-  window_stack_push(s_window, animated);
+  loading_window_push();
 }
 
 static void prv_deinit(void) {
-  window_destroy(s_window);
+  //window_destroy(s_window);
 }
 
 int main(void) {
   prv_init();
 
-  APP_LOG(APP_LOG_LEVEL_DEBUG, "Done initializing, pushed window: %p", s_window);
+  APP_LOG(APP_LOG_LEVEL_DEBUG, "Done initializing, pushed window");
 
   app_event_loop();
   prv_deinit();
